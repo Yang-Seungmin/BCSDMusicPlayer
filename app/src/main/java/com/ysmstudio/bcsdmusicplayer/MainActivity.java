@@ -4,18 +4,18 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import android.Manifest;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Environment;
 import android.provider.MediaStore;
 import android.util.Log;
-import android.widget.ListView;
+import android.widget.TextView;
 
-import java.security.Permission;
 import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity
@@ -23,8 +23,19 @@ public class MainActivity extends AppCompatActivity
 
     private static final int REQUEST_PERMISSION_CODE = 100;
 
-    private ListView listView;
+    private RecyclerView musicRecyclerView;
+    private MusicRecyclerAdapter musicRecyclerAdapter;
     private ArrayList<MusicItem> musicItems;
+
+    private TextView textViewNowPlaying;
+
+
+    private MusicRecyclerAdapter.OnItemClickListener onItemClickListenerMusic = new MusicRecyclerAdapter.OnItemClickListener() {
+        @Override
+        public void onItemClick(int position) {
+            textViewNowPlaying.setText(musicItems.get(position).getMusicTitle());
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,6 +44,11 @@ public class MainActivity extends AppCompatActivity
 
         init();
         if(checkPermission()) getMusicList();
+
+        musicRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+        musicRecyclerView.setAdapter(musicRecyclerAdapter);
+
+        musicRecyclerAdapter.setOnItemClickListener(onItemClickListenerMusic);
     }
 
     private void getMusicList() {
@@ -42,7 +58,10 @@ public class MainActivity extends AppCompatActivity
         String[] projection = new String[] {
                 MediaStore.Audio.Media._ID,
                 MediaStore.Audio.Media.DISPLAY_NAME,
-                MediaStore.Audio.Media.MIME_TYPE
+                MediaStore.Audio.Media.MIME_TYPE,
+                MediaStore.Audio.Media.ARTIST,
+                MediaStore.Audio.Media.TITLE,
+                MediaStore.Audio.Media.DURATION
         };
 
         Cursor cursor = getContentResolver().query(externalUri, projection, null, null, null);
@@ -50,9 +69,14 @@ public class MainActivity extends AppCompatActivity
             Log.e("TAG", "Cursor null or empty");
         } else {
             do {
-                String contentUri = externalUri.toString() + "/" + cursor.getString(0);
-                Log.d("TAG", contentUri);
+                musicItems.add(new MusicItem(
+                        cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.TITLE)),
+                        cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.ARTIST)),
+                        MusicConverter.convertDuration(Long.parseLong(cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.DURATION))))
+                ));
+
             } while(cursor.moveToNext());
+            musicRecyclerAdapter.notifyDataSetChanged();
         }
 
 
@@ -76,9 +100,10 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void init() {
-        listView = findViewById(R.id.list_view_music);
+        musicRecyclerView = findViewById(R.id.recycler_view_music_item);
         musicItems = new ArrayList<>();
-
+        musicRecyclerAdapter = new MusicRecyclerAdapter(musicItems);
+        textViewNowPlaying = findViewById(R.id.text_view_now_playing);
     }
 
     @Override
