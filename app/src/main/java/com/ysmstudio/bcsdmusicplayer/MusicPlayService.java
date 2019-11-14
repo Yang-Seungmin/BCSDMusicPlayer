@@ -1,6 +1,7 @@
 package com.ysmstudio.bcsdmusicplayer;
 
 import android.app.Notification;
+import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Intent;
 import android.os.Binder;
@@ -15,6 +16,8 @@ public class MusicPlayService extends Service {
     private NotificationCompat.Builder builder;
     private Notification notification;
 
+    private PendingIntent pendingIntent;
+
     private final IBinder binder = new MusicPlayServiceBinder();
 
     public MusicPlayService() {
@@ -28,14 +31,19 @@ public class MusicPlayService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+
         return super.onStartCommand(intent, flags, startId);
     }
 
     public void changeMusicItem(MusicItem musicItem) {
+        Intent intentMainActivity = new Intent(this, MainActivity.class);
+        pendingIntent = PendingIntent.getActivity(this, 0, intentMainActivity, 0);
+
         builder = new NotificationCompat.Builder(this, CHANNEL_ID);
         builder.setContentTitle(musicItem.getMusicTitle())
                 .setContentText(musicItem.getMusicArtist())
                 .setSmallIcon(R.mipmap.ic_launcher)
+                .setContentIntent(pendingIntent)
                 .setPriority(NotificationCompat.PRIORITY_DEFAULT);
 
         notification = builder.build();

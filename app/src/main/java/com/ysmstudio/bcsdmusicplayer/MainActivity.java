@@ -78,6 +78,9 @@ public class MainActivity extends AppCompatActivity
         if (checkPermission()) getMusicList();
         createNotificationChannel();
 
+        Intent intent = new Intent(MainActivity.this, MusicPlayService.class);
+        startService(intent);
+
         musicRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         musicRecyclerView.setAdapter(musicRecyclerAdapter);
 
@@ -157,6 +160,5 @@ public class MainActivity extends AppCompatActivity
                 getMusicList();
             } else finish();
         }
-
     }
 }
