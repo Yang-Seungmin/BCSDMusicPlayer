@@ -29,7 +29,7 @@ import android.widget.TextView;
 import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity
-        implements ActivityCompat.OnRequestPermissionsResultCallback, View.OnClickListener, MusicPlayService.OnMusicStateChangedListener {
+        implements ActivityCompat.OnRequestPermissionsResultCallback, View.OnClickListener, MusicPlayService.OnMusicChangedListener {
     public static final String CHANNEL_ID = "CHANNEL_PLAYING_MUSIC";
     private boolean musicServiceBound = false;
     private boolean musicServiceCreated = false;
@@ -42,7 +42,7 @@ public class MainActivity extends AppCompatActivity
     private MusicRecyclerAdapter musicRecyclerAdapter;
     private ArrayList<MusicItem> musicItems;
 
-    private MusicItem selectedMusicItem = null;
+    private int selectedMusicPosition = -1;
 
     private TextView textViewNowPlaying;
 
@@ -51,10 +51,9 @@ public class MainActivity extends AppCompatActivity
     private MusicRecyclerAdapter.OnItemClickListener onItemClickListenerMusic = new MusicRecyclerAdapter.OnItemClickListener() {
         @Override
         public void onItemClick(int position) {
-            textViewNowPlaying.setText(String.valueOf(musicItems.get(position)));
-            selectedMusicItem = musicItems.get(position);
+            selectedMusicPosition = position;
             if (musicServiceBound)
-                musicPlayService.changeMusicItem(musicItems.get(position));
+                musicPlayService.playMusic(musicItems.get(position));
         }
     };
 
@@ -65,11 +64,7 @@ public class MainActivity extends AppCompatActivity
             musicPlayService = binder.getService();
             musicServiceBound = true;
 
-            musicPlayService.setOnMusicStateChangedListener(MainActivity.this);
-
-            if (musicPlayService.getNowPlayingMusicItem() != null) {
-                textViewNowPlaying.setText(String.valueOf(musicPlayService.getNowPlayingMusicItem()));
-            }
+            musicPlayService.setOnMusicChangedListener(MainActivity.this);
         }
 
         @Override
@@ -201,10 +196,20 @@ public class MainActivity extends AppCompatActivity
                 }
                 break;
             case R.id.button_music_control_next:
-
+                if(musicPlayService != null) {
+                    selectedMusicPosition++;
+                    if(selectedMusicPosition == musicItems.size()) selectedMusicPosition = 0;
+                    musicPlayService.playMusic(musicItems.get(selectedMusicPosition));
+                }
                 break;
             case R.id.button_music_control_prev:
+                if(musicPlayService != null && selectedMusicPosition > -1) {
+                    selectedMusicPosition--;
 
+                    if(selectedMusicPosition == -1) selectedMusicPosition = musicItems.size() - 1;
+
+                    musicPlayService.playMusic(musicItems.get(selectedMusicPosition));
+                }
                 break;
         }
     }
@@ -227,5 +232,16 @@ public class MainActivity extends AppCompatActivity
                     ContextCompat.getDrawable(this, R.drawable.ic_play_arrow_black_24dp)
             );
         }
+    }
+
+    @Override
+    public void onMusicChanged(MusicItem musicItem) {
+        if(musicItem != null) textViewNowPlaying.setText(String.valueOf(musicItem));
+    }
+
+    @Override
+    protected void onDestroy() {
+        unbindService(musicServiceConnection);
+        super.onDestroy();
     }
 }
