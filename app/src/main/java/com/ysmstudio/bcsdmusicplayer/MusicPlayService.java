@@ -18,9 +18,15 @@ public class MusicPlayService extends Service {
 
     private PendingIntent pendingIntent;
 
+    private MusicItem nowPlayingMusicItem;
+
     private final IBinder binder = new MusicPlayServiceBinder();
 
     public MusicPlayService() {
+    }
+
+    public MusicItem getNowPlayingMusicItem() {
+        return nowPlayingMusicItem;
     }
 
     @Override
@@ -36,6 +42,7 @@ public class MusicPlayService extends Service {
     }
 
     public void changeMusicItem(MusicItem musicItem) {
+        nowPlayingMusicItem = musicItem;
         Intent intentMainActivity = new Intent(this, MainActivity.class);
         pendingIntent = PendingIntent.getActivity(this, 0, intentMainActivity, 0);
 

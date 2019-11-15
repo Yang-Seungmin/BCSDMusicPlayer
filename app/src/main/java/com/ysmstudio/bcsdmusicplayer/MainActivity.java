@@ -29,6 +29,8 @@ public class MainActivity extends AppCompatActivity
         implements ActivityCompat.OnRequestPermissionsResultCallback {
     public static final String CHANNEL_ID = "CHANNEL_PLAYING_MUSIC";
     private boolean musicServiceBound = false;
+    private boolean musicServiceCreated = false;
+
     private MusicPlayService musicPlayService;
 
     private static final int REQUEST_PERMISSION_CODE = 100;
@@ -43,14 +45,10 @@ public class MainActivity extends AppCompatActivity
     private MusicRecyclerAdapter.OnItemClickListener onItemClickListenerMusic = new MusicRecyclerAdapter.OnItemClickListener() {
         @Override
         public void onItemClick(int position) {
-            textViewNowPlaying.setText(musicItems.get(position).getMusicTitle());
+            textViewNowPlaying.setText(String.valueOf(musicItems.get(position)));
             selectedMusicItem = musicItems.get(position);
-            if (!musicServiceBound) {
-                Intent intent = new Intent(MainActivity.this, MusicPlayService.class);
-                bindService(intent, musicServiceConnection, BIND_AUTO_CREATE);
-            } else {
+            if (musicServiceBound)
                 musicPlayService.changeMusicItem(musicItems.get(position));
-            }
         }
     };
 
@@ -60,7 +58,10 @@ public class MainActivity extends AppCompatActivity
             MusicPlayService.MusicPlayServiceBinder binder = (MusicPlayService.MusicPlayServiceBinder) service;
             musicPlayService = binder.getService();
             musicServiceBound = true;
-            musicPlayService.changeMusicItem(selectedMusicItem);
+
+            if(musicPlayService.getNowPlayingMusicItem() != null) {
+                textViewNowPlaying.setText(String.valueOf(musicPlayService.getNowPlayingMusicItem()));
+            }
         }
 
         @Override
@@ -78,13 +79,18 @@ public class MainActivity extends AppCompatActivity
         if (checkPermission()) getMusicList();
         createNotificationChannel();
 
-        Intent intent = new Intent(MainActivity.this, MusicPlayService.class);
-        startService(intent);
-
         musicRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         musicRecyclerView.setAdapter(musicRecyclerAdapter);
 
         musicRecyclerAdapter.setOnItemClickListener(onItemClickListenerMusic);
+
+        startMusicService();
+    }
+
+    private void startMusicService() {
+        Intent intent = new Intent(MainActivity.this, MusicPlayService.class);
+        startService(intent);
+        bindService(intent, musicServiceConnection, BIND_AUTO_CREATE);
     }
 
     private void createNotificationChannel() {

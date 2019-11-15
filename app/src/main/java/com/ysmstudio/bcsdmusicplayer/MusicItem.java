@@ -40,6 +40,6 @@ public class MusicItem {
 
     @Override
     public String toString() {
-        return "[" + musicArtist + "] " + musicTitle;
+        return musicTitle + " - " + musicArtist;
     }
 }
