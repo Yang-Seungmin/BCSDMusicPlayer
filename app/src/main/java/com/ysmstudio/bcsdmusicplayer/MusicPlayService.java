@@ -13,6 +13,10 @@ import static com.ysmstudio.bcsdmusicplayer.MainActivity.CHANNEL_ID;
 
 public class MusicPlayService extends Service {
     private static final int MUSIC_NOTIFICATION_ID = 100;
+    private MusicState musicState = MusicState.STOPPED;
+
+    private OnMusicStateChangedListener onMusicStateChangedListener;
+
     private NotificationCompat.Builder builder;
     private Notification notification;
 
@@ -22,11 +26,23 @@ public class MusicPlayService extends Service {
 
     private final IBinder binder = new MusicPlayServiceBinder();
 
+    public interface OnMusicStateChangedListener {
+        void onMusicStateChanged(MusicState musicState);
+    }
+
     public MusicPlayService() {
     }
 
     public MusicItem getNowPlayingMusicItem() {
         return nowPlayingMusicItem;
+    }
+
+    public MusicState getMusicState() {
+        return musicState;
+    }
+
+    public void setOnMusicStateChangedListener(OnMusicStateChangedListener onMusicStateChangedListener) {
+        this.onMusicStateChangedListener = onMusicStateChangedListener;
     }
 
     @Override
@@ -37,7 +53,6 @@ public class MusicPlayService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-
         return super.onStartCommand(intent, flags, startId);
     }
 
@@ -56,11 +71,27 @@ public class MusicPlayService extends Service {
         notification = builder.build();
 
         startForeground(MUSIC_NOTIFICATION_ID, notification);
+
+        playMusic();
     }
 
     public class MusicPlayServiceBinder extends Binder {
         MusicPlayService getService() {
             return MusicPlayService.this;
         }
+    }
+
+    public void playMusic() {
+        musicState = MusicState.PLAYING;
+        if (onMusicStateChangedListener != null)
+            onMusicStateChangedListener.onMusicStateChanged(musicState);
+        startForeground(MUSIC_NOTIFICATION_ID, notification);
+    }
+
+    public void pauseMusic() {
+        musicState = MusicState.PAUSED;
+        if (onMusicStateChangedListener != null)
+            onMusicStateChangedListener.onMusicStateChanged(musicState);
+        stopForeground(false);
     }
 }
