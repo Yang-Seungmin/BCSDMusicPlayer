@@ -92,16 +92,14 @@ public class MusicPlayService extends Service {
             onMusicChangedListener.onMusicStateChanged(musicState);
             onMusicChangedListener.onMusicChanged(nowPlayingMusicItem);
         }
+
+        notifyNotification();
         startForeground(MUSIC_NOTIFICATION_ID, notification);
     }
 
     public void playMusic(MusicItem musicItem) {
         changeMusicItem(musicItem);
-        musicState = MusicState.PLAYING;
-        if (onMusicChangedListener != null) {
-            onMusicChangedListener.onMusicStateChanged(musicState);
-            onMusicChangedListener.onMusicChanged(nowPlayingMusicItem);
-        }
+        playMusic();
     }
 
     public void pauseMusic() {
@@ -110,6 +108,10 @@ public class MusicPlayService extends Service {
             onMusicChangedListener.onMusicStateChanged(musicState);
         stopForeground(false);
 
+        notifyNotification();
+    }
+
+    private void notifyNotification() {
         builder.setSubText(String.valueOf(musicState));
         notification = builder.build();
 

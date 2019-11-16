@@ -185,12 +185,8 @@ public class MainActivity extends AppCompatActivity
             case R.id.button_music_control_play_pause:
                 if (musicPlayService != null && musicPlayService.getNowPlayingMusicItem() != null) {
                     if (musicPlayService.getMusicState() == MusicState.PAUSED) {
-                        ((ImageButton) v).setImageDrawable(
-                                ContextCompat.getDrawable(this, R.drawable.ic_play_arrow_black_24dp)
-                        );
                         musicPlayService.playMusic();
                     } else if (musicPlayService.getMusicState() == MusicState.PLAYING) {
-
                         musicPlayService.pauseMusic();
                     }
                 }
