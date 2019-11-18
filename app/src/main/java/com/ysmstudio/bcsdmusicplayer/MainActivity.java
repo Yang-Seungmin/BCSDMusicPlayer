@@ -17,6 +17,7 @@ import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -113,14 +114,12 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    private void getMusicList() {
+    public void getMusicList() {
         //Log.d("Public Music Dir", String.valueOf(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC)));
 
         Uri externalUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
         String[] projection = new String[]{
                 MediaStore.Audio.Media._ID,
-                MediaStore.Audio.Media.DISPLAY_NAME,
-                MediaStore.Audio.Media.MIME_TYPE,
                 MediaStore.Audio.Media.ARTIST,
                 MediaStore.Audio.Media.TITLE,
                 MediaStore.Audio.Media.DURATION
