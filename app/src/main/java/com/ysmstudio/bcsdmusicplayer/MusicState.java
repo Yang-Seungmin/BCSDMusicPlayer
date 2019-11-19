@@ -9,6 +9,7 @@ public enum MusicState {
 
     public String string;
     public int id;
+
     MusicState(String s, int id) {
         string = s;
         this.id = id;
