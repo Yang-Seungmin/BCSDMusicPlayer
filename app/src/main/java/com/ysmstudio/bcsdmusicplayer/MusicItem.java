@@ -14,7 +14,6 @@ public class MusicItem {
     }
 
     public String getMusicDuration() {
-        //Log.d("TAG", musicDuration);
         return musicDuration;
     }
 
@@ -31,7 +30,6 @@ public class MusicItem {
     }
 
     public String getMusicTitle() {
-        //Log.d("TAG", musicTitle);
         return musicTitle;
     }
 

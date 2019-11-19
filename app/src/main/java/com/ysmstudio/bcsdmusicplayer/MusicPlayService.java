@@ -20,6 +20,7 @@ import static com.ysmstudio.bcsdmusicplayer.MainActivity.CHANNEL_ID;
 public class MusicPlayService extends Service
         implements MediaPlayer.OnPreparedListener, MediaPlayer.OnCompletionListener, MediaPlayer.OnErrorListener {
     private static final int MUSIC_NOTIFICATION_ID = 100;
+
     private MusicState musicState = MusicState.STOPPED;
 
     private OnMusicChangedListener onMusicChangedListener;
@@ -43,7 +44,7 @@ public class MusicPlayService extends Service
     @Override
     public void onCompletion(MediaPlayer mp) {
         setMusicState(MusicState.STOPPED);
-        if(mediaPlayer != null) {
+        if (mediaPlayer != null) {
             mediaPlayer.release();
             mediaPlayer = null;
         }
@@ -53,7 +54,7 @@ public class MusicPlayService extends Service
 
     @Override
     public void onDestroy() {
-        if(mediaPlayer != null) {
+        if (mediaPlayer != null) {
             mediaPlayer.stop();
             mediaPlayer = null;
         }
@@ -62,7 +63,7 @@ public class MusicPlayService extends Service
 
     @Override
     public boolean onError(MediaPlayer mp, int what, int extra) {
-        Log.e("TAG", what + ", " + extra);
+        Log.e("MediaPlayer", "Error while preparing MediaPlayer" + what + ", " + extra);
         return false;
     }
 
@@ -91,7 +92,8 @@ public class MusicPlayService extends Service
 
     public void setMusicState(MusicState musicState) {
         this.musicState = musicState;
-        if(onMusicChangedListener != null) onMusicChangedListener.onMusicStateChanged(this.musicState);
+        if (onMusicChangedListener != null)
+            onMusicChangedListener.onMusicStateChanged(this.musicState);
     }
 
     @Override
@@ -106,9 +108,9 @@ public class MusicPlayService extends Service
     }
 
     private void initMusicPlayer(MusicItem musicItem) throws IOException {
-        Log.d("TAG", String.valueOf(musicItem.getMusicUri()));
+        //Log.d("TAG", String.valueOf(musicItem.getMusicUri()));
         //Log.d("TAG", musicItem.getMusicTitle());
-        if(mediaPlayer != null) {
+        if (mediaPlayer != null) {
             mediaPlayer.stop();
         }
         mediaPlayer = new MediaPlayer();
@@ -152,7 +154,7 @@ public class MusicPlayService extends Service
         }
     }
 
-    public void playMusic() throws IOException {
+    public void playMusic() {
         setMusicState(MusicState.PLAYING);
         if (onMusicChangedListener != null) {
             onMusicChangedListener.onMusicStateChanged(musicState);
@@ -175,7 +177,7 @@ public class MusicPlayService extends Service
             onMusicChangedListener.onMusicStateChanged(musicState);
         stopForeground(false);
 
-        if(mediaPlayer != null) mediaPlayer.pause();
+        if (mediaPlayer != null) mediaPlayer.pause();
 
         notifyNotification();
     }
