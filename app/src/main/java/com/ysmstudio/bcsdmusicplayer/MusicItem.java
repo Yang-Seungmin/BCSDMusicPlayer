@@ -1,11 +1,13 @@
 package com.ysmstudio.bcsdmusicplayer;
 
-import android.util.Log;
+import android.net.Uri;
 
 public class MusicItem {
+    private Uri musicUri;
     private String musicTitle, musicArtist, musicDuration;
 
-    public MusicItem(String musicTitle, String musicArtist, String musicDuration) {
+    public MusicItem(Uri musicUri, String musicTitle, String musicArtist, String musicDuration) {
+        this.musicUri = musicUri;
         this.musicTitle = musicTitle;
         this.musicArtist = musicArtist;
         this.musicDuration = musicDuration;
@@ -14,6 +16,14 @@ public class MusicItem {
     public String getMusicDuration() {
         //Log.d("TAG", musicDuration);
         return musicDuration;
+    }
+
+    public Uri getMusicUri() {
+        return musicUri;
+    }
+
+    public void setMusicUri(Uri musicUri) {
+        this.musicUri = musicUri;
     }
 
     public void setMusicDuration(String musicDuration) {

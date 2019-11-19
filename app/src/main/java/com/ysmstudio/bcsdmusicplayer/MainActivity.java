@@ -12,10 +12,12 @@ import android.Manifest;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.content.ComponentName;
+import android.content.ContentUris;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
+import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
@@ -27,6 +29,7 @@ import android.view.View;
 import android.widget.ImageButton;
 import android.widget.TextView;
 
+import java.io.IOException;
 import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity
@@ -53,8 +56,13 @@ public class MainActivity extends AppCompatActivity
         @Override
         public void onItemClick(int position) {
             selectedMusicPosition = position;
-            if (musicServiceBound)
-                musicPlayService.playMusic(musicItems.get(position));
+            if (musicServiceBound) {
+                try {
+                    musicPlayService.playMusic(musicItems.get(position));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
         }
     };
 
@@ -130,7 +138,12 @@ public class MainActivity extends AppCompatActivity
             Log.e("TAG", "Cursor null or empty");
         } else {
             do {
+                Uri contentUri = ContentUris.withAppendedId(
+                        externalUri,
+                        cursor.getLong(cursor.getColumnIndex(MediaStore.Audio.Media._ID)));
+
                 musicItems.add(new MusicItem(
+                        contentUri,
                         cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.TITLE)),
                         cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.ARTIST)),
                         MusicConverter.convertDuration(Long.parseLong(cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.DURATION))))
@@ -155,7 +168,6 @@ public class MainActivity extends AppCompatActivity
     private void requestPermission() {
         ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
                 REQUEST_PERMISSION_CODE);
-
     }
 
     private void init() {
@@ -184,26 +196,38 @@ public class MainActivity extends AppCompatActivity
             case R.id.button_music_control_play_pause:
                 if (musicPlayService != null && musicPlayService.getNowPlayingMusicItem() != null) {
                     if (musicPlayService.getMusicState() == MusicState.PAUSED) {
-                        musicPlayService.playMusic();
+                        try {
+                            musicPlayService.playMusic();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
                     } else if (musicPlayService.getMusicState() == MusicState.PLAYING) {
                         musicPlayService.pauseMusic();
                     }
                 }
                 break;
             case R.id.button_music_control_next:
-                if(musicPlayService != null) {
+                if (musicPlayService != null) {
                     selectedMusicPosition++;
-                    if(selectedMusicPosition == musicItems.size()) selectedMusicPosition = 0;
-                    musicPlayService.playMusic(musicItems.get(selectedMusicPosition));
+                    if (selectedMusicPosition == musicItems.size()) selectedMusicPosition = 0;
+                    try {
+                        musicPlayService.playMusic(musicItems.get(selectedMusicPosition));
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                 }
                 break;
             case R.id.button_music_control_prev:
-                if(musicPlayService != null && selectedMusicPosition > -1) {
+                if (musicPlayService != null && selectedMusicPosition > -1) {
                     selectedMusicPosition--;
 
-                    if(selectedMusicPosition == -1) selectedMusicPosition = musicItems.size() - 1;
+                    if (selectedMusicPosition == -1) selectedMusicPosition = musicItems.size() - 1;
 
-                    musicPlayService.playMusic(musicItems.get(selectedMusicPosition));
+                    try {
+                        musicPlayService.playMusic(musicItems.get(selectedMusicPosition));
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                 }
                 break;
         }
@@ -211,17 +235,17 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onMusicStateChanged(MusicState musicState) {
-        if(musicState == MusicState.PLAYING) {
+        if (musicState == MusicState.PLAYING) {
             buttonPlayPause.setEnabled(true);
             buttonPlayPause.setImageDrawable(
                     ContextCompat.getDrawable(this, R.drawable.ic_pause_black_24dp)
             );
-        } else if(musicState == MusicState.PAUSED) {
+        } else if (musicState == MusicState.PAUSED) {
             buttonPlayPause.setEnabled(true);
             buttonPlayPause.setImageDrawable(
                     ContextCompat.getDrawable(this, R.drawable.ic_play_arrow_black_24dp)
             );
-        } else if(musicState == MusicState.STOPPED) {
+        } else if (musicState == MusicState.STOPPED) {
             buttonPlayPause.setEnabled(false);
             buttonPlayPause.setImageDrawable(
                     ContextCompat.getDrawable(this, R.drawable.ic_play_arrow_black_24dp)
@@ -231,7 +255,7 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onMusicChanged(MusicItem musicItem) {
-        if(musicItem != null) textViewNowPlaying.setText(String.valueOf(musicItem));
+        if (musicItem != null) textViewNowPlaying.setText(String.valueOf(musicItem));
     }
 
     @Override
