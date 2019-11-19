@@ -44,7 +44,7 @@ public class MusicRecyclerAdapter extends RecyclerView.Adapter<MusicRecyclerAdap
         holder.container.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(onItemClickListener != null) onItemClickListener.onItemClick(position);
+                if (onItemClickListener != null) onItemClickListener.onItemClick(position);
             }
         });
     }
@@ -54,7 +54,7 @@ public class MusicRecyclerAdapter extends RecyclerView.Adapter<MusicRecyclerAdap
         return musicItemArrayList.size();
     }
 
-    public class ViewHolder extends RecyclerView.ViewHolder{
+    public class ViewHolder extends RecyclerView.ViewHolder {
 
         public TextView textViewMusicTitle, textViewMusicArtist, textViewMusicDuration;
         public View container;

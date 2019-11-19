@@ -38,7 +38,6 @@ public class MainActivity extends AppCompatActivity
         implements ActivityCompat.OnRequestPermissionsResultCallback, View.OnClickListener, MusicPlayService.OnMusicChangedListener {
     public static final String CHANNEL_ID = "CHANNEL_PLAYING_MUSIC";
     private boolean musicServiceBound = false;
-    private boolean musicServiceCreated = false;
 
     private MusicPlayService musicPlayService;
 
@@ -54,8 +53,10 @@ public class MainActivity extends AppCompatActivity
 
     private interface PermissionListener {
         void onPermissionGranted();
+
         void onPermissionDenied();
     }
+
     private AppCompatImageButton buttonPlayPause, buttonPrev, buttonNext;
 
     private PermissionListener permissionListener;
@@ -107,6 +108,7 @@ public class MainActivity extends AppCompatActivity
 
                 musicRecyclerAdapter.setOnItemClickListener(onItemClickListenerMusic);
             }
+
             @Override
             public void onPermissionDenied() {
                 showPermissionDialog();
@@ -174,7 +176,7 @@ public class MainActivity extends AppCompatActivity
     private void checkPermission() {
         int readStoragePermission = ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE);
 
-        if(readStoragePermission == PackageManager.PERMISSION_GRANTED) {
+        if (readStoragePermission == PackageManager.PERMISSION_GRANTED) {
             permissionListener.onPermissionGranted();
         } else {
             requestPermission();
@@ -183,7 +185,7 @@ public class MainActivity extends AppCompatActivity
 
     private void requestPermission() {
         ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
-                 REQUEST_PERMISSION_CODE);
+                REQUEST_PERMISSION_CODE);
     }
 
     private void init() {
@@ -199,8 +201,8 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        if(requestCode == REQUEST_PERMISSION_CODE) {
-            if(grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+        if (requestCode == REQUEST_PERMISSION_CODE) {
+            if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 permissionListener.onPermissionGranted();
             } else {
                 permissionListener.onPermissionDenied();
