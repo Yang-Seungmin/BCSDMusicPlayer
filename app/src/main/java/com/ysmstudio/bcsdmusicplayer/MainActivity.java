@@ -1,6 +1,7 @@
 package com.ysmstudio.bcsdmusicplayer;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.AppCompatImageButton;
 import androidx.core.app.ActivityCompat;
@@ -9,6 +10,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.Manifest;
+import android.content.DialogInterface;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.content.ComponentName;
@@ -50,7 +52,13 @@ public class MainActivity extends AppCompatActivity
 
     private TextView textViewNowPlaying;
 
+    private interface PermissionListener {
+        void onPermissionGranted();
+        void onPermissionDenied();
+    }
     private AppCompatImageButton buttonPlayPause, buttonPrev, buttonNext;
+
+    private PermissionListener permissionListener;
 
     private MusicRecyclerAdapter.OnItemClickListener onItemClickListenerMusic = new MusicRecyclerAdapter.OnItemClickListener() {
         @Override
@@ -88,18 +96,26 @@ public class MainActivity extends AppCompatActivity
         setContentView(R.layout.activity_main);
 
         init();
-        if (checkPermission()) getMusicList();
-        createNotificationChannel();
+        permissionListener = new PermissionListener() {
+            @Override
+            public void onPermissionGranted() {
+                getMusicList();
 
-        musicRecyclerView.setLayoutManager(new LinearLayoutManager(this));
-        musicRecyclerView.setAdapter(musicRecyclerAdapter);
+                musicRecyclerView.setLayoutManager(new LinearLayoutManager(MainActivity.this));
+                musicRecyclerView.setAdapter(musicRecyclerAdapter);
 
-        musicRecyclerAdapter.setOnItemClickListener(onItemClickListenerMusic);
+                musicRecyclerAdapter.setOnItemClickListener(onItemClickListenerMusic);
+            }
+            @Override
+            public void onPermissionDenied() {
+                showPermissionDialog();
+            }
+        };
+        checkPermission();
 
         buttonPlayPause.setOnClickListener(this);
         buttonNext.setOnClickListener(this);
         buttonPrev.setOnClickListener(this);
-
         startMusicService();
     }
 
@@ -154,20 +170,19 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    private boolean checkPermission() {
+    private void checkPermission() {
         int readStoragePermission = ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE);
 
-        if (readStoragePermission == PackageManager.PERMISSION_GRANTED) {
-            return true;
+        if(readStoragePermission == PackageManager.PERMISSION_GRANTED) {
+            permissionListener.onPermissionGranted();
         } else {
             requestPermission();
         }
-        return false;
     }
 
     private void requestPermission() {
         ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
-                REQUEST_PERMISSION_CODE);
+                 REQUEST_PERMISSION_CODE);
     }
 
     private void init() {
@@ -183,10 +198,12 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        if (requestCode == REQUEST_PERMISSION_CODE) {
-            if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                getMusicList();
-            } else finish();
+        if(requestCode == REQUEST_PERMISSION_CODE) {
+            if(grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                permissionListener.onPermissionGranted();
+            } else {
+                permissionListener.onPermissionDenied();
+            }
         }
     }
 
@@ -231,6 +248,26 @@ public class MainActivity extends AppCompatActivity
                 }
                 break;
         }
+    }
+
+    private void showPermissionDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("권한 허용 필요")
+                .setMessage("기능을 사용하려면 권한을 허용해야 합니다.")
+                .setPositiveButton("다시 시도", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        checkPermission();
+                    }
+                })
+                .setNegativeButton("종료", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        finish();
+                    }
+                })
+                .setCancelable(false)
+                .show();
     }
 
     @Override
