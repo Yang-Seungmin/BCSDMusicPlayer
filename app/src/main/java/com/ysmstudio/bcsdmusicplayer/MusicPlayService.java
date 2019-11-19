@@ -29,6 +29,7 @@ public class MusicPlayService extends Service {
 
     public interface OnMusicChangedListener {
         void onMusicStateChanged(MusicState musicState);
+
         void onMusicChanged(MusicItem musicItem);
     }
 
@@ -68,7 +69,7 @@ public class MusicPlayService extends Service {
         builder = new NotificationCompat.Builder(this, CHANNEL_ID);
         builder.setContentTitle(musicItem.getMusicTitle())
                 .setContentText(musicItem.getMusicArtist())
-                .setSmallIcon(R.mipmap.ic_launcher)
+                .setSmallIcon(musicState.id)
                 .setContentIntent(pendingIntent)
                 .setSubText(String.valueOf(musicState))
                 .setPriority(NotificationCompat.PRIORITY_DEFAULT);
@@ -113,6 +114,7 @@ public class MusicPlayService extends Service {
 
     private void notifyNotification() {
         builder.setSubText(String.valueOf(musicState));
+        builder.setSmallIcon(musicState.id);
         notification = builder.build();
 
         NotificationManagerCompat.from(this).notify(MUSIC_NOTIFICATION_ID, notification);
