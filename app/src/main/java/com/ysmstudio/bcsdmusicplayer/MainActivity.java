@@ -96,6 +96,7 @@ public class MainActivity extends AppCompatActivity
         setContentView(R.layout.activity_main);
 
         init();
+        createNotificationChannel();
         permissionListener = new PermissionListener() {
             @Override
             public void onPermissionGranted() {
