@@ -1,6 +1,7 @@
 package com.ysmstudio.bcsdmusicplayer;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -8,6 +9,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.Manifest;
+import android.content.DialogInterface;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
@@ -29,6 +31,12 @@ public class MainActivity extends AppCompatActivity
 
     private TextView textViewNowPlaying;
 
+    private interface PermissionListener {
+        void onPermissionGranted();
+        void onPermissionDenied();
+    }
+
+    private PermissionListener permissionListener;
 
     private MusicRecyclerAdapter.OnItemClickListener onItemClickListenerMusic = new MusicRecyclerAdapter.OnItemClickListener() {
         @Override
@@ -43,12 +51,23 @@ public class MainActivity extends AppCompatActivity
         setContentView(R.layout.activity_main);
 
         init();
-        if(checkPermission()) getMusicList();
+        permissionListener = new PermissionListener() {
+            @Override
+            public void onPermissionGranted() {
+                getMusicList();
 
-        musicRecyclerView.setLayoutManager(new LinearLayoutManager(this));
-        musicRecyclerView.setAdapter(musicRecyclerAdapter);
+                musicRecyclerView.setLayoutManager(new LinearLayoutManager(MainActivity.this));
+                musicRecyclerView.setAdapter(musicRecyclerAdapter);
 
-        musicRecyclerAdapter.setOnItemClickListener(onItemClickListenerMusic);
+                musicRecyclerAdapter.setOnItemClickListener(onItemClickListenerMusic);
+            }
+            @Override
+            public void onPermissionDenied() {
+                showPermissionDialog();
+            }
+        };
+        checkPermission();
+
     }
 
     private void getMusicList() {
@@ -82,21 +101,19 @@ public class MainActivity extends AppCompatActivity
 
     }
 
-    private boolean checkPermission() {
+    private void checkPermission() {
         int readStoragePermission = ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE);
 
         if(readStoragePermission == PackageManager.PERMISSION_GRANTED) {
-            return true;
+            permissionListener.onPermissionGranted();
         } else {
             requestPermission();
         }
-        return false;
     }
 
     private void requestPermission() {
         ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
                  REQUEST_PERMISSION_CODE);
-
     }
 
     private void init() {
@@ -110,9 +127,31 @@ public class MainActivity extends AppCompatActivity
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         if(requestCode == REQUEST_PERMISSION_CODE) {
             if(grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                getMusicList();
-            } else finish();
+                permissionListener.onPermissionGranted();
+            } else {
+                permissionListener.onPermissionDenied();
+            }
         }
 
+    }
+
+    private void showPermissionDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("권한 허용 필요")
+                .setMessage("기능을 사용하려면 권한을 허용해야 합니다.")
+                .setPositiveButton("다시 시도", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        checkPermission();
+                    }
+                })
+                .setNegativeButton("종료", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        finish();
+                    }
+                })
+                .setCancelable(false)
+                .show();
     }
 }
