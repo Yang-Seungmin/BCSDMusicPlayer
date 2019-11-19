@@ -43,16 +43,20 @@ public class MusicPlayService extends Service
     @Override
     public void onCompletion(MediaPlayer mp) {
         setMusicState(MusicState.STOPPED);
-        mediaPlayer.release();
-        mediaPlayer = null;
+        if(mediaPlayer != null) {
+            mediaPlayer.release();
+            mediaPlayer = null;
+        }
         stopForeground(false);
         notifyNotification();
     }
 
     @Override
     public void onDestroy() {
-        mediaPlayer.stop();
-        mediaPlayer = null;
+        if(mediaPlayer != null) {
+            mediaPlayer.stop();
+            mediaPlayer = null;
+        }
         super.onDestroy();
     }
 
@@ -103,6 +107,9 @@ public class MusicPlayService extends Service
     private void initMusicPlayer(MusicItem musicItem) throws IOException {
         Log.d("TAG", String.valueOf(musicItem.getMusicUri()));
         //Log.d("TAG", musicItem.getMusicTitle());
+        if(mediaPlayer != null) {
+            mediaPlayer.stop();
+        }
         mediaPlayer = new MediaPlayer();
         mediaPlayer.setOnPreparedListener(this);
         mediaPlayer.setOnCompletionListener(this);
@@ -110,7 +117,6 @@ public class MusicPlayService extends Service
         mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
         mediaPlayer.setDataSource(getApplicationContext(), musicItem.getMusicUri());
         mediaPlayer.prepareAsync();
-
     }
 
     public void changeMusicItem(MusicItem musicItem) throws IOException {
@@ -118,6 +124,13 @@ public class MusicPlayService extends Service
         setMusicState(MusicState.PLAYING);
         Intent intentMainActivity = new Intent(this, MainActivity.class);
         pendingIntent = PendingIntent.getActivity(this, 0, intentMainActivity, 0);
+
+        setMusicState(MusicState.PLAYING);
+        if (onMusicChangedListener != null) {
+            onMusicChangedListener.onMusicStateChanged(musicState);
+            onMusicChangedListener.onMusicChanged(nowPlayingMusicItem);
+        }
+        initMusicPlayer(musicItem);
 
         builder = new NotificationCompat.Builder(this, CHANNEL_ID);
         builder.setContentTitle(musicItem.getMusicTitle())
@@ -145,9 +158,7 @@ public class MusicPlayService extends Service
             onMusicChangedListener.onMusicChanged(nowPlayingMusicItem);
         }
 
-        if(mediaPlayer == null)
-            initMusicPlayer(nowPlayingMusicItem);
-        else mediaPlayer.start();
+        mediaPlayer.start();
 
         notifyNotification();
         startForeground(MUSIC_NOTIFICATION_ID, notification);
@@ -155,7 +166,6 @@ public class MusicPlayService extends Service
 
     public void playMusic(MusicItem musicItem) throws IOException {
         changeMusicItem(musicItem);
-        playMusic();
     }
 
     public void pauseMusic() {
